@@ -1,199 +1,302 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Adhan App</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <title>Adhan App - Fast Prayer Times</title>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" media="print" onload="this.media='all'">
   <style>
-    :root { --p:#0d6efd; --s:#28a745; --bg:#f8f9fa; --card:#fff; --text:#212529; --b:#ddd; }
-    [data-theme="dark"] { --bg:#121212; --card:#1e1e1e; --text:#e0e0e0; --b:#333; }
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:system-ui,sans-serif; background:var(--bg); color:var(--text); transition:0.3s; }
-    .c { max-width:500px; margin:20px auto; padding:20px; }
-    h1 { text-align:center; font-size:2.8rem; color:var(--p); margin:20px 0 10px; }
-    .loc { text-align:center; color:var(--s); font-weight:600; font-size:1.1rem; margin:15px 0; }
-    .card { background:var(--card); border-radius:20px; padding:24px; margin:20px 0; box-shadow:0 10px 30px rgba(0,0,0,0.1); border:1px solid var(--b); }
-    .prayer { display:flex; justify-content:space-between; padding:16px 0; border-bottom:1px solid var(--b); font-size:1.35rem; }
-    .prayer:last-child { border:none; }
-    .prayer.now { background:rgba(13,110,253,0.15); border-radius:12px; padding:18px; transform:scale(1.02); box-shadow:0 4px 15px rgba(13,110,253,0.2); }
-    .next { text-align:center; font-size:1.5rem; color:var(--p); font-weight:bold; margin:20px 0 10px; }
-    .count { text-align:center; font-size:2.8rem; font-weight:bold; color:var(--s); letter-spacing:2px; }
-    button { padding:14px 28px; border:none; border-radius:50px; background:var(--p); color:#fff; font-size:1.1rem; cursor:pointer; margin:10px; min-width:160px; box-shadow:0 4px 15px rgba(13,110,253,0.3); }
-    button:hover { transform:translateY(-2px); }
-    button.s { background:#ffc107; color:#000; }
-    .theme { position:fixed; top:20px; right:20px; background:var(--card); padding:14px; border-radius:50%; cursor:pointer; font-size:1.5rem; box-shadow:0 4px 15px rgba(0,0,0,0.2); z-index:99; border:2px solid var(--b); }
-    .load { text-align:center; padding:60px 20px; }
-    .load i { font-size:4rem; color:var(--p); animation:p 2s infinite; }
-    @keyframes p { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
-    @media (max-width:600px) {
-      h1{font-size:2.3rem;} .count{font-size:2.4rem;} button{width:80%; margin:10px auto; display:block;}
+    :root {
+      --primary: #009688; /* better teal shade */
+      --success: #26a69a;
+      --bg: #121212;
+      --card: #1e1e1e;
+      --text: #e0e0e0;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      transition: background 0.3s, color 0.3s;
+    }
+    .container {
+      max-width: 500px;
+      margin: 20px auto;
+      padding: 20px;
+    }
+    .header { text-align: center; margin-bottom: 25px; }
+    .header h1 { color: var(--primary); font-size: 2.2rem; }
+    .location {
+      text-align: center;
+      font-size: 1.1rem;
+      margin: 10px 0;
+      color: var(--success);
+    }
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 6px 25px rgba(0,0,0,0.25);
+      margin-bottom: 15px;
+    }
+    .prayer {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #333;
+      font-size: 1.2rem;
+    }
+    .prayer:last-child { border-bottom: none; }
+    .prayer.now {
+      background: rgba(0,150,136,0.15);
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .next-prayer {
+      text-align: center;
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: var(--primary);
+      margin: 10px 0;
+    }
+    .countdown {
+      text-align: center;
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--success);
+      margin-bottom: 10px;
+    }
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin: 15px 0;
+    }
+    button {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 40px;
+      background: var(--primary);
+      color: #fff;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: opacity 0.3s;
+    }
+    button:hover { opacity: 0.9; }
+    .theme-toggle {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      background: var(--card);
+      padding: 10px;
+      border-radius: 50%;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+      cursor: pointer;
+      font-size: 1.3rem;
+    }
+    .loading {
+      text-align: center;
+      padding: 35px;
+      font-size: 1.1rem;
+      color: #aaa;
+    }
+    .footer {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #777;
+      margin-top: 25px;
     }
   </style>
 </head>
-<body>
-  <div class="theme" onclick="toggleTheme()">Moon</div>
+<body data-theme="dark">
+  <div class="theme-toggle" onclick="toggleTheme()">
+    <i class="fas fa-sun"></i>
+  </div>
 
-  <div class="c">
-    <h1>Adhan App</h1>
-    <div id="loc" class="loc">Detecting location...</div>
+  <div class="container">
+    <div class="header">
+      <h1><i class="fas fa-mosque"></i> Adhan App</h1>
+    </div>
 
-    <div id="load" class="load">
-      <i class="fas fa-mosque"></i><br><br>Loading prayer times...
+    <div id="location" class="location">Detecting location...</div>
+
+    <div id="loading" class="loading">
+      <i class="fas fa-pray fa-3x"></i><br><br>Loading prayer times...
     </div>
 
     <div id="prayers" class="card" style="display:none;">
-      <div id="next" class="next">Next Prayer: Calculating...</div>
-      <div id="count" class="count">--:--:--</div>
-      
-      <div class="prayer"><span>Fajr</span> <span id="fajr">--:--</span></div>
-      <div class="prayer"><span>Sunrise</span> <span id="sunrise">--:--</span></div>
-      <div class="prayer"><span>Dhuhr</span> <span id="dhuhr">--:--</span></div>
-      <div class="prayer"><span>Asr</span> <span id="asr">--:--</span></div>
-      <div class="prayer"><span>Maghrib</span> <span id="maghrib">--:--</span></div>
-      <div class="prayer"><span>Isha</span> <span id="isha">--:--</span></div>
+      <div id="nextPrayer" class="next-prayer"></div>
+      <div id="countdown" class="countdown">--:--:--</div>
+      <div class="prayer"><span class="name">Fajr</span><span id="fajr">--:--</span></div>
+      <div class="prayer"><span class="name">Dhuhr</span><span id="dhuhr">--:--</span></div>
+      <div class="prayer"><span class="name">Asr</span><span id="asr">--:--</span></div>
+      <div class="prayer"><span class="name">Maghrib</span><span id="maghrib">--:--</span></div>
+      <div class="prayer"><span class="name">Isha</span><span id="isha">--:--</span></div>
     </div>
 
-    <div style="text-align:center; margin:20px 0;">
-      <button onclick="playAdhan()">Play Adhan</button>
-      <button onclick="getLocation()" class="s">Refresh</button>
+    <div class="controls">
+      <button onclick="playAdhan()"><i class="fas fa-play"></i> Play Adhan</button>
+      <button onclick="getLocation(true)"><i class="fas fa-sync"></i> Refresh</button>
+    </div>
+
+    <div class="footer">
+      Powered by Aladhan API • Created by Shahrear Chowdhury
+      <br>
+      <a href="https://github.com/ShahrearCS" target="_blank" style="color:#ccc;text-decoration:none;">
+        <i class="fab fa-github"></i> GitHub
+      </a>
     </div>
   </div>
 
-  <audio id="adhanAudio" preload="auto">
+  <audio id="adhanAudio" preload="none">
     <source src="https://download.quranicaudio.com/athan/Alafasy/athan1.mp3" type="audio/mp3"/>
   </audio>
 
   <script>
-    const prayers = ['Fajr','Dhuhr','Asr','Maghrib','Isha'];
+    let timings24h = {};
     let countdownInterval;
+    const CACHE_KEY = "adhan_cache";
 
+    // Theme toggle
     function toggleTheme() {
-      const dark = document.body.toggleAttribute('data-theme');
-      document.querySelector('.theme').innerHTML = dark ? 'Sun' : 'Moon';
-      localStorage.setItem('theme', dark ? 'dark' : 'light');
-    }
-    if (localStorage.getItem('theme') === 'dark' || 
-        (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      document.body.setAttribute('data-theme','dark');
-      document.querySelector('.theme').innerHTML = 'Sun';
-    }
-
-    function to12hr(time24) {
-      if (!time24 || time24 === '--:--') return '--:--';
-      const [h, m] = time24.split(':').map(Number);
-      const period = h >= 12 ? 'PM' : 'AM';
-      const h12 = h % 12 || 12;
-      return `${h12}:${m.toString().padStart(2,'0')} ${period}`;
-    }
-
-    function getLocation() {
-      document.getElementById('load').style.display = 'block';
-      document.getElementById('prayers').style.display = 'none';
-      document.getElementById('loc').innerHTML = 'Detecting location...';
-
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(fetchPrayerTimes, err => {
-          document.getElementById('loc').innerHTML = 'Location denied. Tap Refresh & allow.';
-          document.getElementById('load').style.display = 'none';
-        }, {enableHighAccuracy:true, timeout:10000});
+      const body = document.body;
+      const icon = document.querySelector('.theme-toggle i');
+      if (body.dataset.theme === "dark") {
+        body.removeAttribute('data-theme');
+        icon.classList.replace('fa-sun', 'fa-moon');
+        localStorage.setItem('theme', 'light');
+      } else {
+        body.dataset.theme = "dark";
+        icon.classList.replace('fa-moon', 'fa-sun');
+        localStorage.setItem('theme', 'dark');
       }
     }
 
-    async function fetchPrayerTimes(pos) {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      const date = new Date().toISOString().slice(0,10);
-      
+    if (localStorage.getItem('theme') !== 'light') {
+      document.body.dataset.theme = "dark";
+      document.querySelector('.theme-toggle i').classList.replace('fa-moon', 'fa-sun');
+    }
+
+    // Use cache if available
+    function getLocation(forceRefresh = false) {
+      const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
+      const today = new Date().toISOString().slice(0, 10);
+
+      if (cached && cached.date === today && !forceRefresh) {
+        displayPrayerData(cached);
+      } else {
+        document.getElementById('loading').style.display = 'block';
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(pos => fetchPrayerTimes(pos, today), showError);
+        } else {
+          document.getElementById('location').innerHTML = "Geolocation not supported";
+        }
+      }
+    }
+
+    async function fetchPrayerTimes(position, date) {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      const url = `https://api.aladhan.com/v1/timings/${date}?latitude=${lat}&longitude=${lng}&method=2`;
+
       try {
-        const res = await fetch(`https://api.aladhan.com/v1/timings/${date}?latitude=${lat}&longitude=${lng}&method=2`);
+        const res = await fetch(url, { cache: "force-cache" });
         const data = await res.json();
-        if (data.code !== 200) throw '';
-
-        const t = data.data.timings;
-        const meta = data.data.meta;
-
-        document.getElementById('loc').innerHTML = `${meta.timezone} • ${new Date().toLocaleDateString()}`;
-
-        document.getElementById('fajr').textContent = to12hr(t.Fajr);
-        document.getElementById('sunrise').textContent = to12hr(t.Sunrise);
-        document.getElementById('dhuhr').textContent = to12hr(t.Dhuhr);
-        document.getElementById('asr').textContent = to12hr(t.Asr);
-        document.getElementById('maghrib').textContent = to12hr(t.Maghrib);
-        document.getElementById('isha').textContent = to12hr(t.Isha);
-
-        document.getElementById('load').style.display = 'none';
-        document.getElementById('prayers').style.display = 'block';
-
-        updateNextPrayer(t);
-        startCountdown();
+        if (data.code === 200) {
+          const prayerData = {
+            date,
+            meta: data.data.meta,
+            timings: data.data.timings
+          };
+          localStorage.setItem(CACHE_KEY, JSON.stringify(prayerData));
+          displayPrayerData(prayerData);
+        }
       } catch {
-        document.getElementById('loc').innerHTML = 'No internet. Try again.';
-        document.getElementById('load').style.display = 'none';
+        document.getElementById('location').innerText = "Failed to load data";
       }
     }
 
-    function toMinutes(t) {
-      const [h,m] = t.split(':').map(Number);
-      return h*60 + m;
-    }
+    function displayPrayerData(data) {
+      const timings = data.timings;
+      const meta = data.meta;
 
-    function updateNextPrayer(t) {
-      const now = new Date();
-      const times = {
-        Fajr: toMinutes(t.Fajr),
-        Dhuhr: toMinutes(t.Dhuhr),
-        Asr: toMinutes(t.Asr),
-        Maghrib: toMinutes(t.Maghrib),
-        Isha: toMinutes(t.Isha)
+      timings24h = {
+        Fajr: timings.Fajr,
+        Dhuhr: timings.Dhuhr,
+        Asr: timings.Asr,
+        Maghrib: timings.Maghrib,
+        Isha: timings.Isha
       };
-      let next = null, minDiff = Infinity;
-      for (let p in times) {
-        let diff = times[p] - toMinutes(now);
-        if (diff > 0 && diff < minDiff) { minDiff = diff; next = p; }
+
+      document.getElementById('location').innerHTML =
+        `<i class="fas fa-map-marker-alt"></i> ${meta.timezone} • ${new Date().toLocaleDateString()}`;
+
+      for (let key in timings24h) {
+        const el = document.getElementById(key.toLowerCase());
+        if (el) el.textContent = to12Hour(timings24h[key]);
       }
-      if (!next) { next = 'Fajr'; }
-      document.getElementById('next').innerHTML = `Next Prayer: ${next}`;
-      document.querySelectorAll('.prayer').forEach(p => p.classList.remove('now'));
-      const el = Array.from(document.querySelectorAll('.prayer')).find(p => p.textContent.includes(next));
-      if (el) el.classList.add('now');
+
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('prayers').style.display = 'block';
+      startCountdown();
+    }
+
+    function to12Hour(time) {
+      let [h, m] = time.split(':').map(Number);
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12;
+      return `${h}:${m.toString().padStart(2, '0')} ${ampm}`;
     }
 
     function startCountdown() {
       clearInterval(countdownInterval);
-      countdownInterval = setInterval(() => {
-        const now = new Date();
-        const active = document.querySelector('.prayer.now');
-        if (!active) return;
-        const name = active.querySelector('span').textContent.trim();
-        const time24 = ['fajr','sunrise','dhuhr','asr','maghrib','isha']
-          .map(id => document.getElementById(id).textContent)
-          .find(t => t.includes(name.split(' ')[0]));
-        if (!time24) return;
-        const [h,m] = time24.split(':').map(Number);
-        let target = new Date(); target.setHours(h,m,0,0);
-        if (target <= now) target.setDate(target.getDate()+1);
-        let diff = Math.floor((target - now)/1000);
-        const hrs = Math.floor(diff/3600).toString().padStart(2,'0');
-        const mins = Math.floor((diff%3600)/60).toString().padStart(2,'0');
-        const secs = (diff%60).toString().padStart(2,'0');
-        document.getElementById('count').textContent = `${hrs}:${mins}:${secs}`;
-        if (hrs==='00' && mins==='02' && secs==='00') {
-          setTimeout(() => { playAdhan(); alert(`Adhan time for ${name}!`); }, 1000);
-        }
-      }, 1000);
+      updateCountdownDisplay();
+      countdownInterval = setInterval(updateCountdownDisplay, 1000);
+    }
+
+    function updateCountdownDisplay() {
+      const now = new Date();
+      let nextPrayer = null, minDiff = Infinity;
+
+      for (let p in timings24h) {
+        const [h, m] = timings24h[p].split(':').map(Number);
+        const prayerTime = new Date();
+        prayerTime.setHours(h, m, 0, 0);
+        if (prayerTime < now) prayerTime.setDate(prayerTime.getDate() + 1);
+        const diff = (prayerTime - now) / 1000;
+        if (diff < minDiff) { minDiff = diff; nextPrayer = p; }
+      }
+
+      if (!nextPrayer) nextPrayer = "Fajr";
+
+      document.querySelectorAll('.prayer').forEach(p => p.classList.remove('now'));
+      const active = [...document.querySelectorAll('.prayer')]
+        .find(p => p.querySelector('.name').textContent.includes(nextPrayer));
+      if (active) active.classList.add('now');
+
+      const h = Math.floor(minDiff / 3600);
+      const m = Math.floor((minDiff % 3600) / 60);
+      const s = Math.floor(minDiff % 60);
+
+      document.getElementById('nextPrayer').innerHTML = `<i class="fas fa-clock"></i> Next: ${nextPrayer}`;
+      document.getElementById('countdown').textContent =
+        `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     }
 
     function playAdhan() {
-      const a = document.getElementById('adhanAudio');
-      a.currentTime = 0;
-      a.play().catch(() => alert('Tap screen first, then Play Adhan'));
+      const audio = document.getElementById('adhanAudio');
+      audio.play().catch(() => alert("Click once to allow audio playback"));
     }
 
-    window.onload = () => {
-      getLocation();
-      setInterval(getLocation, 600000);
-    };
+    function showError() {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('location').innerText = "Location access denied.";
+    }
+
+    window.onload = () => getLocation();
   </script>
 </body>
 </html>
