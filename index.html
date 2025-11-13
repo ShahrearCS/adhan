@@ -167,126 +167,147 @@
     <source src="https://download.quranicaudio.com/athan/Alafasy/athan1.mp3" type="audio/mp3"/>
   </audio>
 
-  <script>
-    let timings24h = {};
-    let countdownInterval;
+<script>
+  let timings24h = {};
+  let countdownInterval;
 
-    // Apply stored theme or default to dark
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    document.body.setAttribute('data-theme', savedTheme);
-    const themeIcon = document.querySelector('.theme-toggle i');
-    themeIcon.classList.replace('fa-moon', savedTheme === 'dark' ? 'fa-sun' : 'fa-moon');
+  // Apply stored theme or default to dark
+  const savedTheme = localStorage.getItem('theme') || 'dark';
+  document.body.setAttribute('data-theme', savedTheme);
+  const themeIcon = document.querySelector('.theme-toggle i');
+  themeIcon.classList.replace('fa-moon', savedTheme === 'dark' ? 'fa-sun' : 'fa-moon');
 
-    function toggleTheme() {
-      const current = document.body.getAttribute('data-theme');
-      const newTheme = current === 'dark' ? 'light' : 'dark';
-      document.body.setAttribute('data-theme', newTheme);
-      themeIcon.classList.replace(newTheme === 'dark' ? 'fa-moon' : 'fa-sun', newTheme === 'dark' ? 'fa-sun' : 'fa-moon');
-      localStorage.setItem('theme', newTheme);
+  function toggleTheme() {
+    const current = document.body.getAttribute('data-theme');
+    const newTheme = current === 'dark' ? 'light' : 'dark';
+    document.body.setAttribute('data-theme', newTheme);
+    themeIcon.classList.replace(newTheme === 'dark' ? 'fa-moon' : 'fa-sun', newTheme === 'dark' ? 'fa-sun' : 'fa-moon');
+    localStorage.setItem('theme', newTheme);
+  }
+
+  function getLocation() {
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('prayers').style.display = 'none';
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(fetchPrayerTimes, showError);
+    } else {
+      document.getElementById('location').innerText = "Geolocation not supported.";
+    }
+  }
+
+  function showError() {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('location').innerText = "Unable to get location.";
+  }
+
+  async function fetchPrayerTimes(position) {
+    const lat = position.coords.latitude.toFixed(3);
+    const lng = position.coords.longitude.toFixed(3);
+    const today = new Date().toISOString().slice(0,10);
+
+    const cacheKey = `prayers_${lat}_${lng}_${today}`;
+    const cached = localStorage.getItem(cacheKey);
+
+    if (cached) {
+      const data = JSON.parse(cached);
+      renderPrayerTimes(data, lat, lng);
+      return;
     }
 
-    function getLocation() {
-      document.getElementById('loading').style.display = 'block';
-      document.getElementById('prayers').style.display = 'none';
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(fetchPrayerTimes, showError);
-      } else {
-        document.getElementById('location').innerText = "Geolocation not supported.";
-      }
-    }
-
-    function showError() {
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('location').innerText = "Unable to get location.";
-    }
-
-    async function fetchPrayerTimes(position) {
-      const lat = position.coords.latitude.toFixed(3);
-      const lng = position.coords.longitude.toFixed(3);
-      const today = new Date().toISOString().slice(0,10);
-      const cacheKey = `prayers_${lat}_${lng}_${today}`;
-      const cached = localStorage.getItem(cacheKey);
-
-      if (cached) {
-        const data = JSON.parse(cached);
-        renderPrayerTimes(data, lat, lng);
-        return;
-      }
-
+    try {
       const response = await fetch(`https://api.aladhan.com/v1/timings/${today}?latitude=${lat}&longitude=${lng}&method=2`);
       const data = await response.json();
       if (data.code === 200) {
         localStorage.setItem(cacheKey, JSON.stringify(data.data));
         renderPrayerTimes(data.data, lat, lng);
-      }
+      } else throw new Error('Invalid API response');
+    } catch (e) {
+      document.getElementById('loading').innerText = "Error fetching prayer times.";
+    }
+  }
+
+  async function renderPrayerTimes(data, lat, lng) {
+    const t = data.timings;
+    timings24h = { Fajr: t.Fajr, Dhuhr: t.Dhuhr, Asr: t.Asr, Maghrib: t.Maghrib, Isha: t.Isha };
+    await getCityName(lat, lng);
+
+    for (let key in timings24h) {
+      const el = document.getElementById(key.toLowerCase());
+      if (el) el.textContent = to12Hour(timings24h[key]);
     }
 
-    async function renderPrayerTimes(data, lat, lng) {
-      const t = data.timings;
-      timings24h = { Fajr: t.Fajr, Dhuhr: t.Dhuhr, Asr: t.Asr, Maghrib: t.Maghrib, Isha: t.Isha };
-      await getCityName(lat, lng);
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('prayers').style.display = 'block';
+    startCountdown();
+  }
 
-      for (let key in timings24h) {
-        const el = document.getElementById(key.toLowerCase());
-        if (el) el.textContent = to12Hour(timings24h[key]);
-      }
+  async function getCityName(lat, lng) {
+    const locKey = `city_${lat}_${lng}`;
+    const cachedLoc = localStorage.getItem(locKey);
+    const today = new Date().toLocaleDateString();
 
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('prayers').style.display = 'block';
-      startCountdown();
+    if (cachedLoc) {
+      const info = JSON.parse(cachedLoc);
+      document.getElementById('location').innerHTML =
+        `<i class="fas fa-map-marker-alt"></i> ${info.city}, ${info.country} • ${today}`;
+      return;
     }
 
-    async function getCityName(lat, lng) {
-      try {
-        const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`);
-        const info = await res.json();
-        const city = info.city || info.locality || info.principalSubdivision || "Unknown";
-        document.getElementById('location').innerHTML =
-          `<i class="fas fa-map-marker-alt"></i> ${city}, ${info.countryName} • ${new Date().toLocaleDateString()}`;
-      } catch {
-        document.getElementById('location').innerHTML =
-          `<i class="fas fa-map-marker-alt"></i> Location unavailable • ${new Date().toLocaleDateString()}`;
-      }
+    try {
+      const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`);
+      const info = await res.json();
+      const city = info.city || info.locality || info.principalSubdivision || "Unknown";
+      const locationInfo = { city, country: info.countryName };
+      localStorage.setItem(locKey, JSON.stringify(locationInfo));
+
+      document.getElementById('location').innerHTML =
+        `<i class="fas fa-map-marker-alt"></i> ${city}, ${info.countryName} • ${today}`;
+    } catch {
+      document.getElementById('location').innerHTML =
+        `<i class="fas fa-map-marker-alt"></i> Location unavailable • ${today}`;
+    }
+  }
+
+  function to12Hour(time) {
+    let [h, m] = time.split(':').map(Number);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return `${h}:${m.toString().padStart(2,'0')} ${ampm}`;
+  }
+
+  function startCountdown() {
+    clearInterval(countdownInterval);
+    countdownInterval = setInterval(updateCountdownDisplay, 1000);
+    updateCountdownDisplay();
+  }
+
+  function updateCountdownDisplay() {
+    const now = new Date();
+    let nextPrayer = null, minDiff = Infinity;
+
+    for (let p in timings24h) {
+      let [h, m] = timings24h[p].split(':').map(Number);
+      let t = new Date(); t.setHours(h, m, 0, 0);
+      if (t < now) t.setDate(t.getDate() + 1);
+      let diff = (t - now) / 1000;
+      if (diff < minDiff) { minDiff = diff; nextPrayer = p; }
     }
 
-    function to12Hour(time) {
-      let [h, m] = time.split(':').map(Number);
-      const ampm = h >= 12 ? 'PM' : 'AM';
-      h = h % 12 || 12;
-      return `${h}:${m.toString().padStart(2,'0')} ${ampm}`;
-    }
+    if (!nextPrayer) nextPrayer = 'Fajr';
+    document.querySelectorAll('.prayer').forEach(p => p.classList.remove('now'));
+    const active = Array.from(document.querySelectorAll('.prayer'))
+      .find(p => p.querySelector('.name').textContent.includes(nextPrayer));
+    if (active) active.classList.add('now');
 
-    function startCountdown() {
-      clearInterval(countdownInterval);
-      countdownInterval = setInterval(updateCountdownDisplay, 1000);
-      updateCountdownDisplay();
-    }
+    const h = Math.floor(minDiff / 3600);
+    const m = Math.floor((minDiff % 3600) / 60);
+    const s = Math.floor(minDiff % 60);
+    document.getElementById('nextPrayer').innerHTML = `<i class="fas fa-clock"></i> Next: ${nextPrayer} in`;
+    document.getElementById('countdown').textContent =
+      `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+  }
 
-    function updateCountdownDisplay() {
-      const now = new Date();
-      let nextPrayer = null, minDiff = Infinity;
-
-      for (let p in timings24h) {
-        let [h, m] = timings24h[p].split(':').map(Number);
-        let t = new Date(); t.setHours(h, m, 0, 0);
-        if (t < now) t.setDate(t.getDate() + 1);
-        let diff = (t - now) / 1000;
-        if (diff < minDiff) { minDiff = diff; nextPrayer = p; }
-      }
-
-      if (!nextPrayer) nextPrayer = 'Fajr';
-      document.querySelectorAll('.prayer').forEach(p => p.classList.remove('now'));
-      const active = Array.from(document.querySelectorAll('.prayer')).find(p => p.querySelector('.name').textContent.includes(nextPrayer));
-      if (active) active.classList.add('now');
-
-      const h = Math.floor(minDiff / 3600);
-      const m = Math.floor((minDiff % 3600) / 60);
-      const s = Math.floor(minDiff % 60);
-      document.getElementById('nextPrayer').innerHTML = `<i class="fas fa-clock"></i> Next: ${nextPrayer} in`;
-      document.getElementById('countdown').textContent = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-    }
-
-    window.onload = () => { getLocation(); };
-  </script>
+  window.onload = () => { getLocation(); };
+</script>
 </body>
 </html>
