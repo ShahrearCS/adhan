@@ -3,76 +3,79 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Adhan App - Prayer Times</title>
+  <title>Adhan</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-  <link rel="icon" href="favicon.png" type="image/png">
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/818/818450.png" type="image/png">
+
   <style>
     :root {
-      --primary: #009688; /* teal-green for better look */
-      --success: #009688;
-      --bg: #f8f9fa;
-      --card: #ffffff;
-      --text: #212529;
-    }
-    [data-theme="dark"] {
+      --primary: #009688; /* teal green */
+      --success: #26a69a;
       --bg: #121212;
       --card: #1e1e1e;
       --text: #e0e0e0;
     }
+    [data-theme="light"] {
+      --bg: #f8f9fa;
+      --card: #ffffff;
+      --text: #212529;
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', sans-serif;
       background: var(--bg);
       color: var(--text);
-      line-height: 1.6;
       transition: background 0.3s, color 0.3s;
+      line-height: 1.6;
     }
     .container {
       max-width: 500px;
-      margin: 20px auto;
-      padding: 20px;
+      margin: 0 auto;
     }
     .header {
       text-align: center;
       margin-bottom: 30px;
     }
     .header h1 {
-      font-size: 2.5rem;
+      font-size: 2.3rem;
       color: var(--primary);
     }
     .location {
       text-align: center;
       font-size: 1.1rem;
-      margin: 15px 0;
+      margin: 10px 0 20px;
       color: var(--success);
     }
     .card {
       background: var(--card);
       border-radius: 16px;
       padding: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
       margin-bottom: 20px;
     }
     .prayer {
       display: flex;
       justify-content: space-between;
-      padding: 15px 0;
-      border-bottom: 1px solid #333;
-      font-size: 1.3rem;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      font-size: 1.2rem;
     }
     .prayer:last-child { border-bottom: none; }
-    .prayer.now { background: rgba(0,150,136,0.15); border-radius: 8px; }
-    .prayer .name { font-weight: 600; }
+    .prayer.now {
+      background: rgba(0,150,136,0.15);
+      border-radius: 8px;
+    }
     .next-prayer {
       text-align: center;
-      margin: 20px 0;
-      font-size: 1.4rem;
+      margin: 15px 0;
+      font-size: 1.3rem;
       color: var(--primary);
       font-weight: bold;
     }
     .countdown {
       text-align: center;
-      font-size: 2rem;
+      font-size: 1.8rem;
       font-weight: bold;
       color: var(--success);
     }
@@ -83,7 +86,7 @@
       margin: 20px 0;
     }
     button {
-      padding: 12px 20px;
+      padding: 10px 20px;
       border: none;
       border-radius: 50px;
       background: var(--primary);
@@ -95,20 +98,20 @@
     button:hover { opacity: 0.9; }
     .theme-toggle {
       position: fixed;
-      top: 20px;
-      right: 20px;
+      top: 15px;
+      right: 15px;
       background: var(--card);
       padding: 10px;
       border-radius: 50%;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       cursor: pointer;
-      font-size: 1.4rem;
+      font-size: 1.3rem;
     }
     .loading {
       text-align: center;
       padding: 40px;
-      font-size: 1.2rem;
-      color: #666;
+      font-size: 1.1rem;
+      color: #888;
     }
     .github-link {
       display: inline-flex;
@@ -122,7 +125,7 @@
     .github-link i { margin-right: 8px; font-size: 24px; }
   </style>
 </head>
-<body>
+<body data-theme="dark">
   <div class="theme-toggle" onclick="toggleTheme()">
     <i class="fas fa-sun"></i>
   </div>
@@ -151,7 +154,9 @@
     </div>
 
     <div style="text-align:center; margin-top:30px; font-size:0.9rem; color:#777;">
-      Powered by Aladhan API • Created by Shahrear Chowdhury 
+      Powered by Aladhan API • Created by Shahrear Chowdhury
+    </div>
+    <div style="text-align:center;">
       <a class="github-link" href="https://github.com/ShahrearCS" target="_blank">
         <i class="fab fa-github"></i> GitHub
       </a>
@@ -190,7 +195,7 @@
       }
     }
 
-    function showError(e) {
+    function showError() {
       document.getElementById('loading').style.display = 'none';
       document.getElementById('location').innerText = "Unable to get location.";
     }
@@ -204,7 +209,7 @@
 
       if (cached) {
         const data = JSON.parse(cached);
-        renderPrayerTimes(data);
+        renderPrayerTimes(data, lat, lng);
         return;
       }
 
@@ -212,14 +217,14 @@
       const data = await response.json();
       if (data.code === 200) {
         localStorage.setItem(cacheKey, JSON.stringify(data.data));
-        renderPrayerTimes(data.data);
+        renderPrayerTimes(data.data, lat, lng);
       }
     }
 
-    function renderPrayerTimes(data) {
+    async function renderPrayerTimes(data, lat, lng) {
       const t = data.timings;
       timings24h = { Fajr: t.Fajr, Dhuhr: t.Dhuhr, Asr: t.Asr, Maghrib: t.Maghrib, Isha: t.Isha };
-      document.getElementById('location').innerHTML = `<i class="fas fa-map-marker-alt"></i> ${data.meta.timezone} • ${new Date().toLocaleDateString()}`;
+      await getCityName(lat, lng);
 
       for (let key in timings24h) {
         const el = document.getElementById(key.toLowerCase());
@@ -229,6 +234,19 @@
       document.getElementById('loading').style.display = 'none';
       document.getElementById('prayers').style.display = 'block';
       startCountdown();
+    }
+
+    async function getCityName(lat, lng) {
+      try {
+        const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`);
+        const info = await res.json();
+        const city = info.city || info.locality || info.principalSubdivision || "Unknown";
+        document.getElementById('location').innerHTML =
+          `<i class="fas fa-map-marker-alt"></i> ${city}, ${info.countryName} • ${new Date().toLocaleDateString()}`;
+      } catch {
+        document.getElementById('location').innerHTML =
+          `<i class="fas fa-map-marker-alt"></i> Location unavailable • ${new Date().toLocaleDateString()}`;
+      }
     }
 
     function to12Hour(time) {
