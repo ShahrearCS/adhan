@@ -32,69 +32,78 @@
       color: var(--text);
       line-height: 1.6;
       transition: background .3s, color .3s;
-      padding: 20px 15px 40px;
+      padding: 12px 12px 24px;
     }
-    .container { max-width: 520px; margin: 0 auto; }
-    .header { text-align: center; margin-bottom: 10px; }
-    .header h1 { font-size: 2.3rem; color: var(--primary); }
-    .location { text-align: center; font-size: 1.05rem; color: var(--success); }
-    .hijri { text-align: center; font-size: .9rem; color: var(--muted); margin-bottom: 20px; }
+    .container { max-width: 980px; margin: 0 auto; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+    .grid .card { margin-bottom: 0; }
+    @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+    .header { text-align: center; margin-bottom: 2px; }
+    .header h1 { font-size: 1.6rem; color: var(--primary); }
+    .location { text-align: center; font-size: .95rem; color: var(--success); }
+    .hijri { text-align: center; font-size: .82rem; color: var(--muted); margin-bottom: 12px; }
 
     .card {
       background: var(--card);
-      border-radius: 16px;
-      padding: 20px;
+      border-radius: 14px;
+      padding: 14px 16px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, .15);
       margin-bottom: 20px;
     }
     .card h2 {
-      font-size: 1.1rem;
+      font-size: .95rem;
       color: var(--primary);
-      margin-bottom: 12px;
+      margin-bottom: 8px;
       display: flex; align-items: center; gap: 8px;
     }
     .hidden { display: none !important; }
 
     /* Prayer times */
-    .next-prayer { text-align: center; font-size: 1.25rem; color: var(--primary); font-weight: bold; }
-    .countdown { text-align: center; font-size: 1.9rem; font-weight: bold; color: var(--success); margin-bottom: 10px; font-variant-numeric: tabular-nums; }
+    .next-prayer { text-align: center; font-size: 1rem; color: var(--primary); font-weight: bold; }
+    .countdown { text-align: center; font-size: 1.5rem; font-weight: bold; color: var(--success); margin-bottom: 6px; font-variant-numeric: tabular-nums; }
     .prayer {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 10px 12px; border-bottom: 1px solid var(--line); font-size: 1.15rem;
+      padding: 6px 10px; border-bottom: 1px solid var(--line); font-size: .98rem;
     }
     .prayer:last-child { border-bottom: none; }
     .prayer.next { background: rgba(0, 150, 136, .15); border-radius: 8px; }
     .prayer i { width: 22px; color: var(--muted); margin-right: 6px; }
 
     /* Sun */
-    .sun-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; text-align: center; }
+    .sun-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: center; }
+    #sunCard { display: flex; flex-direction: column; justify-content: center; }
     .sun-box { padding: 10px; border-radius: 12px; background: rgba(255, 183, 77, .08); }
-    .sun-box i { font-size: 1.6rem; color: var(--sun); }
-    .sun-box .label { font-size: .85rem; color: var(--muted); }
-    .sun-box .time { font-size: 1.3rem; font-weight: bold; }
-    .daylength { text-align: center; font-size: .9rem; color: var(--muted); margin-top: 10px; }
+    .sun-box i { font-size: 1.4rem; color: var(--sun); }
+    .sun-box .label { font-size: .8rem; color: var(--muted); }
+    .sun-box .time { font-size: 1.15rem; font-weight: bold; }
+    .daylength { text-align: center; font-size: .82rem; color: var(--muted); margin-top: 8px; }
 
     /* Qibla */
-    .qibla-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .qibla-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
     .compass {
-      position: relative; width: 220px; height: 220px; border-radius: 50%;
+      position: relative; width: 150px; height: 150px; border-radius: 50%; margin-top: 10px;
       border: 3px solid var(--primary);
       background: radial-gradient(circle, rgba(0,150,136,.10) 0%, transparent 70%);
     }
     .compass-dial { position: absolute; inset: 0; transition: transform .25s ease-out; }
     .compass-dial .dir {
-      position: absolute; font-weight: bold; font-size: .95rem; color: var(--muted);
+      position: absolute; font-weight: bold; font-size: .8rem; color: var(--muted);
       left: 50%; top: 50%;
     }
     .compass-dial .dir.n { color: #e53935; }
     .qibla-needle {
-      position: absolute; left: 50%; top: 50%; width: 4px; height: 92px;
-      margin-left: -2px; margin-top: -92px; transform-origin: 50% 100%;
+      position: absolute; left: 50%; top: 50%; width: 3px; height: 56px;
+      margin-left: -1.5px; margin-top: -56px; transform-origin: 50% 100%;
       background: linear-gradient(var(--primary), transparent); border-radius: 2px;
     }
     .qibla-needle i {
-      position: absolute; top: -26px; left: 50%; transform: translateX(-50%);
-      font-size: 1.4rem; color: var(--primary);
+      position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
+      font-size: 1.1rem; color: var(--primary);
     }
     .compass-center {
       position: absolute; left: 50%; top: 50%; width: 12px; height: 12px;
@@ -105,47 +114,47 @@
       border-left: 8px solid transparent; border-right: 8px solid transparent;
       border-top: 12px solid var(--text);
     }
-    .qibla-angle { font-size: 1.6rem; font-weight: bold; color: var(--success); }
-    .qibla-info { font-size: .9rem; color: var(--muted); text-align: center; }
-    .qibla-status { font-size: .9rem; text-align: center; }
+    .qibla-angle { font-size: 1.2rem; font-weight: bold; color: var(--success); }
+    .qibla-info { font-size: .8rem; color: var(--muted); text-align: center; }
+    .qibla-status { font-size: .8rem; text-align: center; }
     .qibla-status.aligned { color: var(--success); font-weight: bold; }
 
     /* Weather */
-    .weather-now { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 14px; }
-    .weather-now .icon { font-size: 2.6rem; color: var(--sun); }
-    .weather-now .temp { font-size: 2.2rem; font-weight: bold; }
-    .weather-now .desc { font-size: .95rem; color: var(--muted); }
+    .weather-now { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 6px; }
+    .weather-now .icon { font-size: 1.9rem; color: var(--sun); }
+    .weather-now .temp { font-size: 1.5rem; line-height: 1.2; font-weight: bold; }
+    .weather-now .desc { font-size: .8rem; line-height: 1.35; color: var(--muted); }
     .day {
-      display: grid; grid-template-columns: 70px 30px 1fr auto; align-items: center; gap: 10px;
-      padding: 8px 4px; border-bottom: 1px solid var(--line);
+      display: grid; grid-template-columns: 46px 20px 1fr auto; align-items: center; gap: 8px;
+      padding: 3px 2px; font-size: .85rem; line-height: 1.3; border-bottom: 1px solid var(--line);
     }
     .day:last-child { border-bottom: none; }
     .day .name { font-weight: 600; }
     .day .wicon { text-align: center; color: var(--sun); }
-    .day .meta { font-size: .8rem; color: var(--muted); }
+    .day .meta { font-size: .74rem; color: var(--muted); }
     .day .range { font-variant-numeric: tabular-nums; white-space: nowrap; }
     .day .range .lo { color: var(--muted); margin-left: 6px; }
 
     /* Controls */
-    .controls { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin: 20px 0; }
+    .controls { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin: 14px 0 0; }
     button, .btn {
-      padding: 10px 20px; border: none; border-radius: 50px; background: var(--primary);
-      color: #fff; cursor: pointer; font-size: 1rem; text-decoration: none;
+      padding: 8px 16px; border: none; border-radius: 50px; background: var(--primary);
+      color: #fff; cursor: pointer; font-size: .9rem; text-decoration: none;
       display: inline-flex; align-items: center; gap: 8px; transition: opacity .2s;
     }
     button:hover, .btn:hover { opacity: .9; }
     button.secondary { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
-    .btn-sm { padding: 6px 14px; font-size: .9rem; }
+    .btn-sm { padding: 5px 12px; font-size: .78rem; }
 
     .theme-toggle {
       position: fixed; top: 15px; right: 15px; width: 44px; height: 44px; padding: 0;
       justify-content: center; background: var(--card); color: var(--text);
       border-radius: 50%; box-shadow: 0 4px 10px rgba(0, 0, 0, .3); font-size: 1.2rem;
     }
-    .loading { text-align: center; padding: 40px; color: var(--muted); }
+    .loading { text-align: center; padding: 20px; color: var(--muted); }
     .error { text-align: center; color: #e57373; padding: 10px; }
-    .footer { text-align: center; margin-top: 30px; font-size: .9rem; color: var(--muted); }
-    .github-link { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text); font-size: 18px; margin-top: 6px; }
+    .footer { text-align: center; margin-top: 16px; font-size: .8rem; color: var(--muted); }
+    .github-link { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; color: var(--text); font-size: .9rem; margin-top: 4px; }
     .github-link:hover { color: var(--primary); }
   </style>
 </head>
@@ -162,6 +171,7 @@
     <div id="loading" class="loading"><i class="fas fa-pray fa-3x"></i><br /><br />Loading prayer times...</div>
     <div id="error" class="error hidden"></div>
 
+    <div class="grid">
     <!-- Prayer times -->
     <section id="prayersCard" class="card hidden">
       <div id="nextPrayer" class="next-prayer"></div>
@@ -194,10 +204,10 @@
         <div class="compass">
           <div class="phone-mark" title="Top of your phone"></div>
           <div class="compass-dial" id="compassDial">
-            <span class="dir n" style="transform: translate(-50%, -50%) translateY(-92px)">N</span>
-            <span class="dir" style="transform: translate(-50%, -50%) translateX(92px)">E</span>
-            <span class="dir" style="transform: translate(-50%, -50%) translateY(92px)">S</span>
-            <span class="dir" style="transform: translate(-50%, -50%) translateX(-92px)">W</span>
+            <span class="dir n" style="transform: translate(-50%, -50%) translateY(-62px)">N</span>
+            <span class="dir" style="transform: translate(-50%, -50%) translateX(62px)">E</span>
+            <span class="dir" style="transform: translate(-50%, -50%) translateY(62px)">S</span>
+            <span class="dir" style="transform: translate(-50%, -50%) translateX(-62px)">W</span>
             <div class="qibla-needle" id="qiblaNeedle"><i class="fas fa-kaaba"></i></div>
           </div>
           <div class="compass-center"></div>
@@ -220,6 +230,7 @@
       <div class="weather-now" id="weatherNow"></div>
       <div id="forecast"></div>
     </section>
+    </div>
 
     <div class="controls">
       <button id="refreshBtn"><i class="fas fa-location-arrow"></i> Refresh</button>
@@ -595,8 +606,7 @@
           <div class="day" title="${dDesc}">
             <span class="name">${name}</span>
             <span class="wicon"><i class="fas ${dIcon}"></i></span>
-            <span class="meta">${dDesc}${rain != null ? ` • <i class="fas fa-umbrella"></i> ${rain}%` : ''}<br>
-              <i class="fas fa-sun"></i> ${to12Hour(d.sunrise[i])} – <i class="fas fa-moon"></i> ${to12Hour(d.sunset[i])}</span>
+            <span class="meta">${dDesc}${rain != null ? ` • <i class="fas fa-umbrella"></i> ${rain}%` : ''}</span>
             <span class="range">${Math.round(d.temperature_2m_max[i])}°<span class="lo">${Math.round(d.temperature_2m_min[i])}°</span></span>
           </div>`;
       }).join('');
