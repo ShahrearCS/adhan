@@ -2,312 +2,657 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#009688" />
   <title>Adhan</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-  <link rel="icon" href="favicon.png" type="image/png">
-
+  <link rel="icon" href="favicon.png" type="image/png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <style>
     :root {
-      --primary: #009688; /* teal green */
+      --primary: #009688;
       --success: #26a69a;
       --bg: #121212;
       --card: #1e1e1e;
       --text: #e0e0e0;
+      --muted: #8a8a8a;
+      --line: rgba(255, 255, 255, 0.08);
+      --sun: #ffb74d;
     }
     [data-theme="light"] {
-      --bg: #f8f9fa;
+      --bg: #f4f6f8;
       --card: #ffffff;
       --text: #212529;
+      --muted: #6c757d;
+      --line: rgba(0, 0, 0, 0.08);
     }
-
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: 'Segoe UI', sans-serif;
+      font-family: 'Segoe UI', system-ui, sans-serif;
       background: var(--bg);
       color: var(--text);
-      transition: background 0.3s, color 0.3s;
       line-height: 1.6;
+      transition: background .3s, color .3s;
+      padding: 20px 15px 40px;
     }
-    .container {
-      max-width: 500px;
-      margin: 0 auto;
-    }
-    .header {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    .header h1 {
-      font-size: 2.3rem;
-      color: var(--primary);
-    }
-    .location {
-      text-align: center;
-      font-size: 1.1rem;
-      margin: 10px 0 20px;
-      color: var(--success);
-    }
+    .container { max-width: 520px; margin: 0 auto; }
+    .header { text-align: center; margin-bottom: 10px; }
+    .header h1 { font-size: 2.3rem; color: var(--primary); }
+    .location { text-align: center; font-size: 1.05rem; color: var(--success); }
+    .hijri { text-align: center; font-size: .9rem; color: var(--muted); margin-bottom: 20px; }
+
     .card {
       background: var(--card);
       border-radius: 16px;
       padding: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .15);
       margin-bottom: 20px;
     }
+    .card h2 {
+      font-size: 1.1rem;
+      color: var(--primary);
+      margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .hidden { display: none !important; }
+
+    /* Prayer times */
+    .next-prayer { text-align: center; font-size: 1.25rem; color: var(--primary); font-weight: bold; }
+    .countdown { text-align: center; font-size: 1.9rem; font-weight: bold; color: var(--success); margin-bottom: 10px; font-variant-numeric: tabular-nums; }
     .prayer {
-      display: flex;
-      justify-content: space-between;
-      padding: 12px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      font-size: 1.2rem;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 12px; border-bottom: 1px solid var(--line); font-size: 1.15rem;
     }
     .prayer:last-child { border-bottom: none; }
-    .prayer.now {
-      background: rgba(0,150,136,0.15);
-      border-radius: 8px;
+    .prayer.next { background: rgba(0, 150, 136, .15); border-radius: 8px; }
+    .prayer i { width: 22px; color: var(--muted); margin-right: 6px; }
+
+    /* Sun */
+    .sun-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; text-align: center; }
+    .sun-box { padding: 10px; border-radius: 12px; background: rgba(255, 183, 77, .08); }
+    .sun-box i { font-size: 1.6rem; color: var(--sun); }
+    .sun-box .label { font-size: .85rem; color: var(--muted); }
+    .sun-box .time { font-size: 1.3rem; font-weight: bold; }
+    .daylength { text-align: center; font-size: .9rem; color: var(--muted); margin-top: 10px; }
+
+    /* Qibla */
+    .qibla-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .compass {
+      position: relative; width: 220px; height: 220px; border-radius: 50%;
+      border: 3px solid var(--primary);
+      background: radial-gradient(circle, rgba(0,150,136,.10) 0%, transparent 70%);
     }
-    .next-prayer {
-      text-align: center;
-      margin: 15px 0;
-      font-size: 1.3rem;
-      color: var(--primary);
-      font-weight: bold;
+    .compass-dial { position: absolute; inset: 0; transition: transform .25s ease-out; }
+    .compass-dial .dir {
+      position: absolute; font-weight: bold; font-size: .95rem; color: var(--muted);
+      left: 50%; top: 50%;
     }
-    .countdown {
-      text-align: center;
-      font-size: 1.8rem;
-      font-weight: bold;
-      color: var(--success);
+    .compass-dial .dir.n { color: #e53935; }
+    .qibla-needle {
+      position: absolute; left: 50%; top: 50%; width: 4px; height: 92px;
+      margin-left: -2px; margin-top: -92px; transform-origin: 50% 100%;
+      background: linear-gradient(var(--primary), transparent); border-radius: 2px;
     }
-    .controls {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      margin: 20px 0;
+    .qibla-needle i {
+      position: absolute; top: -26px; left: 50%; transform: translateX(-50%);
+      font-size: 1.4rem; color: var(--primary);
     }
-    button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 50px;
-      background: var(--primary);
-      color: white;
-      cursor: pointer;
-      font-size: 1rem;
-      transition: 0.3s;
+    .compass-center {
+      position: absolute; left: 50%; top: 50%; width: 12px; height: 12px;
+      margin: -6px 0 0 -6px; border-radius: 50%; background: var(--primary);
     }
-    button:hover { opacity: 0.9; }
+    .phone-mark {
+      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+      border-left: 8px solid transparent; border-right: 8px solid transparent;
+      border-top: 12px solid var(--text);
+    }
+    .qibla-angle { font-size: 1.6rem; font-weight: bold; color: var(--success); }
+    .qibla-info { font-size: .9rem; color: var(--muted); text-align: center; }
+    .qibla-status { font-size: .9rem; text-align: center; }
+    .qibla-status.aligned { color: var(--success); font-weight: bold; }
+
+    /* Weather */
+    .weather-now { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 14px; }
+    .weather-now .icon { font-size: 2.6rem; color: var(--sun); }
+    .weather-now .temp { font-size: 2.2rem; font-weight: bold; }
+    .weather-now .desc { font-size: .95rem; color: var(--muted); }
+    .day {
+      display: grid; grid-template-columns: 70px 30px 1fr auto; align-items: center; gap: 10px;
+      padding: 8px 4px; border-bottom: 1px solid var(--line);
+    }
+    .day:last-child { border-bottom: none; }
+    .day .name { font-weight: 600; }
+    .day .wicon { text-align: center; color: var(--sun); }
+    .day .meta { font-size: .8rem; color: var(--muted); }
+    .day .range { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .day .range .lo { color: var(--muted); margin-left: 6px; }
+
+    /* Controls */
+    .controls { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin: 20px 0; }
+    button, .btn {
+      padding: 10px 20px; border: none; border-radius: 50px; background: var(--primary);
+      color: #fff; cursor: pointer; font-size: 1rem; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 8px; transition: opacity .2s;
+    }
+    button:hover, .btn:hover { opacity: .9; }
+    button.secondary { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+    .btn-sm { padding: 6px 14px; font-size: .9rem; }
+
     .theme-toggle {
-      position: fixed;
-      top: 15px;
-      right: 15px;
-      background: var(--card);
-      padding: 10px;
-      border-radius: 50%;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      cursor: pointer;
-      font-size: 1.3rem;
+      position: fixed; top: 15px; right: 15px; width: 44px; height: 44px; padding: 0;
+      justify-content: center; background: var(--card); color: var(--text);
+      border-radius: 50%; box-shadow: 0 4px 10px rgba(0, 0, 0, .3); font-size: 1.2rem;
     }
-    .loading {
-      text-align: center;
-      padding: 40px;
-      font-size: 1.1rem;
-      color: #888;
-    }
-    .github-link {
-      display: inline-flex;
-      align-items: center;
-      text-decoration: none;
-      color: var(--text);
-      font-size: 18px;
-      transition: color 0.3s;
-    }
+    .loading { text-align: center; padding: 40px; color: var(--muted); }
+    .error { text-align: center; color: #e57373; padding: 10px; }
+    .footer { text-align: center; margin-top: 30px; font-size: .9rem; color: var(--muted); }
+    .github-link { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text); font-size: 18px; margin-top: 6px; }
     .github-link:hover { color: var(--primary); }
-    .github-link i { margin-right: 8px; font-size: 24px; }
   </style>
 </head>
 <body data-theme="dark">
-  <div class="theme-toggle" onclick="toggleTheme()">
-    <i class="fas fa-sun"></i>
-  </div>
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme"><i class="fas fa-sun"></i></button>
 
-  <div class="container">
-    <div class="header">
+  <main class="container">
+    <header class="header">
       <h1><i class="fas fa-mosque"></i> Adhan</h1>
-    </div>
-
+    </header>
     <div id="location" class="location">Detecting location...</div>
-    <div id="loading" class="loading"><i class="fas fa-pray fa-3x"></i><br><br>Loading prayer times...</div>
+    <div id="hijri" class="hijri"></div>
 
-    <div id="prayers" class="card" style="display:none;">
+    <div id="loading" class="loading"><i class="fas fa-pray fa-3x"></i><br /><br />Loading prayer times...</div>
+    <div id="error" class="error hidden"></div>
+
+    <!-- Prayer times -->
+    <section id="prayersCard" class="card hidden">
       <div id="nextPrayer" class="next-prayer"></div>
       <div id="countdown" class="countdown">--:--:--</div>
+      <div id="prayerList"></div>
+    </section>
 
-      <div class="prayer"><span class="name">Fajr</span> <span id="fajr">--:--</span></div>
-      <div class="prayer"><span class="name">Dhuhr</span> <span id="dhuhr">--:--</span></div>
-      <div class="prayer"><span class="name">Asr</span> <span id="asr">--:--</span></div>
-      <div class="prayer"><span class="name">Maghrib</span> <span id="maghrib">--:--</span></div>
-      <div class="prayer"><span class="name">Isha</span> <span id="isha">--:--</span></div>
-    </div>
+    <!-- Sunrise / Sunset -->
+    <section id="sunCard" class="card hidden">
+      <h2><i class="fas fa-sun"></i> Sunrise &amp; Sunset</h2>
+      <div class="sun-grid">
+        <div class="sun-box">
+          <i class="fas fa-sun"></i>
+          <div class="label">Sunrise</div>
+          <div class="time" id="sunrise">--:--</div>
+        </div>
+        <div class="sun-box">
+          <i class="fas fa-moon"></i>
+          <div class="label">Sunset</div>
+          <div class="time" id="sunset">--:--</div>
+        </div>
+      </div>
+      <div class="daylength" id="dayLength"></div>
+    </section>
+
+    <!-- Qibla -->
+    <section id="qiblaCard" class="card hidden">
+      <h2><i class="fas fa-kaaba"></i> Qibla Direction</h2>
+      <div class="qibla-wrap">
+        <div class="compass">
+          <div class="phone-mark" title="Top of your phone"></div>
+          <div class="compass-dial" id="compassDial">
+            <span class="dir n" style="transform: translate(-50%, -50%) translateY(-92px)">N</span>
+            <span class="dir" style="transform: translate(-50%, -50%) translateX(92px)">E</span>
+            <span class="dir" style="transform: translate(-50%, -50%) translateY(92px)">S</span>
+            <span class="dir" style="transform: translate(-50%, -50%) translateX(-92px)">W</span>
+            <div class="qibla-needle" id="qiblaNeedle"><i class="fas fa-kaaba"></i></div>
+          </div>
+          <div class="compass-center"></div>
+        </div>
+        <div class="qibla-angle" id="qiblaAngle">--°</div>
+        <div class="qibla-info" id="qiblaInfo"></div>
+        <div class="qibla-status" id="qiblaStatus">The arrow is relative to North. Turn on the live compass to point your phone.</div>
+        <div class="controls" style="margin: 0;">
+          <button class="btn-sm" id="compassBtn"><i class="fas fa-compass"></i> Live compass</button>
+          <a class="btn btn-sm secondary" href="https://qiblafinder.withgoogle.com/" target="_blank" rel="noopener">
+            <i class="fab fa-google"></i> Google Qibla Finder
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Weather -->
+    <section id="weatherCard" class="card hidden">
+      <h2><i class="fas fa-cloud-sun"></i> 7-Day Weather</h2>
+      <div class="weather-now" id="weatherNow"></div>
+      <div id="forecast"></div>
+    </section>
 
     <div class="controls">
-      <button onclick="getLocation()"><i class="fas fa-location-arrow"></i> Refresh</button>
+      <button id="refreshBtn"><i class="fas fa-location-arrow"></i> Refresh</button>
+      <button id="adhanBtn" class="secondary"><i class="fas fa-volume-xmark"></i> Adhan off</button>
     </div>
 
-    <div style="text-align:center; margin-top:30px; font-size:0.9rem; color:#777;">
-      Powered by Aladhan API • Created by Shahrear Chowdhury
-    </div>
-    <div style="text-align:center;">
-      <a class="github-link" href="https://github.com/ShahrearCS" target="_blank">
+    <footer class="footer">
+      Powered by Aladhan &amp; Open-Meteo • Created by Shahrear Chowdhury<br />
+      <a class="github-link" href="https://github.com/ShahrearCS" target="_blank" rel="noopener">
         <i class="fab fa-github"></i> GitHub
       </a>
-    </div>
-  </div>
+    </footer>
+  </main>
 
-  <audio id="adhanAudio" preload="auto">
-    <source src="https://download.quranicaudio.com/athan/Alafasy/athan1.mp3" type="audio/mp3"/>
+  <audio id="adhanAudio" preload="none">
+    <source src="https://download.quranicaudio.com/athan/Alafasy/athan1.mp3" type="audio/mp3" />
   </audio>
 
 <script>
-  let timings24h = {};
-  let countdownInterval;
+(() => {
+  'use strict';
 
-  // Apply stored theme or default to dark
-  const savedTheme = localStorage.getItem('theme') || 'dark';
-  document.body.setAttribute('data-theme', savedTheme);
-  const themeIcon = document.querySelector('.theme-toggle i');
-  themeIcon.classList.replace('fa-moon', savedTheme === 'dark' ? 'fa-sun' : 'fa-moon');
+  // ---------------------------------------------------------------
+  // Config
+  // ---------------------------------------------------------------
+  const CONFIG = {
+    calcMethod: 2,                         // 2 = ISNA (North America)
+    kaaba: { lat: 21.4225, lng: 39.8262 }, // same point Google Qibla Finder uses
+    weatherCacheMinutes: 30,
+    prayers: [
+      { key: 'Fajr',    icon: 'fa-cloud-moon' },
+      { key: 'Dhuhr',   icon: 'fa-sun' },
+      { key: 'Asr',     icon: 'fa-cloud-sun' },
+      { key: 'Maghrib', icon: 'fa-moon' },
+      { key: 'Isha',    icon: 'fa-star-and-crescent' }
+    ]
+  };
 
-  function toggleTheme() {
-    const current = document.body.getAttribute('data-theme');
-    const newTheme = current === 'dark' ? 'light' : 'dark';
-    document.body.setAttribute('data-theme', newTheme);
-    themeIcon.classList.replace(newTheme === 'dark' ? 'fa-moon' : 'fa-sun', newTheme === 'dark' ? 'fa-sun' : 'fa-moon');
-    localStorage.setItem('theme', newTheme);
-  }
+  // Open-Meteo WMO weather codes -> [description, day icon]
+  const WEATHER_CODES = {
+    0: ['Clear sky', 'fa-sun'], 1: ['Mainly clear', 'fa-sun'], 2: ['Partly cloudy', 'fa-cloud-sun'],
+    3: ['Overcast', 'fa-cloud'], 45: ['Fog', 'fa-smog'], 48: ['Freezing fog', 'fa-smog'],
+    51: ['Light drizzle', 'fa-cloud-rain'], 53: ['Drizzle', 'fa-cloud-rain'], 55: ['Heavy drizzle', 'fa-cloud-rain'],
+    56: ['Freezing drizzle', 'fa-cloud-rain'], 57: ['Freezing drizzle', 'fa-cloud-rain'],
+    61: ['Light rain', 'fa-cloud-rain'], 63: ['Rain', 'fa-cloud-showers-heavy'], 65: ['Heavy rain', 'fa-cloud-showers-heavy'],
+    66: ['Freezing rain', 'fa-cloud-showers-heavy'], 67: ['Freezing rain', 'fa-cloud-showers-heavy'],
+    71: ['Light snow', 'fa-snowflake'], 73: ['Snow', 'fa-snowflake'], 75: ['Heavy snow', 'fa-snowflake'], 77: ['Snow grains', 'fa-snowflake'],
+    80: ['Rain showers', 'fa-cloud-sun-rain'], 81: ['Rain showers', 'fa-cloud-sun-rain'], 82: ['Violent showers', 'fa-cloud-showers-heavy'],
+    85: ['Snow showers', 'fa-snowflake'], 86: ['Snow showers', 'fa-snowflake'],
+    95: ['Thunderstorm', 'fa-bolt'], 96: ['Thunderstorm, hail', 'fa-bolt'], 99: ['Thunderstorm, hail', 'fa-bolt']
+  };
 
-  function getLocation() {
-    document.getElementById('loading').style.display = 'block';
-    document.getElementById('prayers').style.display = 'none';
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(fetchPrayerTimes, showError);
-    } else {
-      document.getElementById('location').innerText = "Geolocation not supported.";
-    }
-  }
+  // ---------------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------------
+  const $ = id => document.getElementById(id);
+  const show = (id, visible = true) => $(id).classList.toggle('hidden', !visible);
+  const pad = n => String(n).padStart(2, '0');
+  const toRad = d => d * Math.PI / 180;
+  const toDeg = r => r * 180 / Math.PI;
 
-  function showError() {
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('location').innerText = "Unable to get location.";
-  }
+  // Local date (toISOString uses UTC and gives the wrong day in the evening)
+  const localDateKey = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const aladhanDate = (d = new Date()) => `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}`;
 
-  async function fetchPrayerTimes(position) {
-    const lat = position.coords.latitude.toFixed(3);
-    const lng = position.coords.longitude.toFixed(3);
-    const today = new Date().toISOString().slice(0,10);
-
-    const cacheKey = `prayers_${lat}_${lng}_${today}`;
-    const cached = localStorage.getItem(cacheKey);
-
-    if (cached) {
-      const data = JSON.parse(cached);
-      renderPrayerTimes(data, lat, lng);
-      return;
-    }
-
-    try {
-      const response = await fetch(`https://api.aladhan.com/v1/timings/${today}?latitude=${lat}&longitude=${lng}&method=2`);
-      const data = await response.json();
-      if (data.code === 200) {
-        localStorage.setItem(cacheKey, JSON.stringify(data.data));
-        renderPrayerTimes(data.data, lat, lng);
-      } else throw new Error('Invalid API response');
-    } catch (e) {
-      document.getElementById('loading').innerText = "Error fetching prayer times.";
-    }
-  }
-
-  async function renderPrayerTimes(data, lat, lng) {
-    const t = data.timings;
-    timings24h = { Fajr: t.Fajr, Dhuhr: t.Dhuhr, Asr: t.Asr, Maghrib: t.Maghrib, Isha: t.Isha };
-    await getCityName(lat, lng);
-
-    for (let key in timings24h) {
-      const el = document.getElementById(key.toLowerCase());
-      if (el) el.textContent = to12Hour(timings24h[key]);
-    }
-
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('prayers').style.display = 'block';
-    startCountdown();
-  }
-
-  async function getCityName(lat, lng) {
-    const locKey = `city_${lat}_${lng}`;
-    const cachedLoc = localStorage.getItem(locKey);
-    const today = new Date().toLocaleDateString();
-
-    if (cachedLoc) {
-      const info = JSON.parse(cachedLoc);
-      document.getElementById('location').innerHTML =
-        `<i class="fas fa-map-marker-alt"></i> ${info.city}, ${info.country} • ${today}`;
-      return;
-    }
-
-    try {
-      const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`);
-      const info = await res.json();
-      const city = info.city || info.locality || info.principalSubdivision || "Unknown";
-      const locationInfo = { city, country: info.countryName };
-      localStorage.setItem(locKey, JSON.stringify(locationInfo));
-
-      document.getElementById('location').innerHTML =
-        `<i class="fas fa-map-marker-alt"></i> ${city}, ${info.countryName} • ${today}`;
-    } catch {
-      document.getElementById('location').innerHTML =
-        `<i class="fas fa-map-marker-alt"></i> Location unavailable • ${today}`;
-    }
-  }
-
+  // "05:12 (EST)" or "2026-11-06T07:01" -> "5:12 AM"
   function to12Hour(time) {
-    let [h, m] = time.split(':').map(Number);
+    const hm = String(time).includes('T') ? time.split('T')[1] : time;
+    let [h, m] = hm.slice(0, 5).split(':').map(Number);
     const ampm = h >= 12 ? 'PM' : 'AM';
     h = h % 12 || 12;
-    return `${h}:${m.toString().padStart(2,'0')} ${ampm}`;
+    return `${h}:${pad(m)} ${ampm}`;
   }
+  const toMinutes = time => {
+    const [h, m] = String(time).slice(0, 5).split(':').map(Number);
+    return h * 60 + m;
+  };
 
-  function startCountdown() {
-    clearInterval(countdownInterval);
-    countdownInterval = setInterval(updateCountdownDisplay, 1000);
-    updateCountdownDisplay();
-  }
-
-  function updateCountdownDisplay() {
-    const now = new Date();
-    let nextPrayer = null, minDiff = Infinity;
-
-    for (let p in timings24h) {
-      let [h, m] = timings24h[p].split(':').map(Number);
-      let t = new Date(); t.setHours(h, m, 0, 0);
-      if (t < now) t.setDate(t.getDate() + 1);
-      let diff = (t - now) / 1000;
-      if (diff < minDiff) { minDiff = diff; nextPrayer = p; }
+  const cache = {
+    get(key, maxAgeMin) {
+      try {
+        const item = JSON.parse(localStorage.getItem(key));
+        if (!item) return null;
+        if (maxAgeMin && Date.now() - item.t > maxAgeMin * 60000) return null;
+        return item.v;
+      } catch { return null; }
+    },
+    set(key, value) {
+      try { localStorage.setItem(key, JSON.stringify({ t: Date.now(), v: value })); } catch { /* storage full */ }
     }
+  };
 
-    if (!nextPrayer) nextPrayer = 'Fajr';
-    document.querySelectorAll('.prayer').forEach(p => p.classList.remove('now'));
-    const active = Array.from(document.querySelectorAll('.prayer'))
-      .find(p => p.querySelector('.name').textContent.includes(nextPrayer));
-    if (active) active.classList.add('now');
-
-    const h = Math.floor(minDiff / 3600);
-    const m = Math.floor((minDiff % 3600) / 60);
-    const s = Math.floor(minDiff % 60);
-    document.getElementById('nextPrayer').innerHTML = `<i class="fas fa-clock"></i> Next: ${nextPrayer} in`;
-    document.getElementById('countdown').textContent =
-      `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+  async function fetchJson(url) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
   }
 
-  window.onload = () => { getLocation(); };
+  function getPosition() {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) return reject(new Error('Geolocation is not supported by this browser.'));
+      navigator.geolocation.getCurrentPosition(
+        p => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
+        err => reject(new Error(err.code === 1
+          ? 'Location permission denied. Allow location access and press Refresh.'
+          : 'Unable to get your location.')),
+        { enableHighAccuracy: false, timeout: 15000, maximumAge: 10 * 60000 }
+      );
+    });
+  }
+
+  // ---------------------------------------------------------------
+  // Theme
+  // ---------------------------------------------------------------
+  const Theme = {
+    init() {
+      this.apply(localStorage.getItem('theme') || 'dark');
+      $('themeToggle').addEventListener('click', () =>
+        this.apply(document.body.dataset.theme === 'dark' ? 'light' : 'dark'));
+    },
+    apply(theme) {
+      document.body.dataset.theme = theme;
+      $('themeToggle').innerHTML = `<i class="fas ${theme === 'dark' ? 'fa-sun' : 'fa-moon'}"></i>`;
+      localStorage.setItem('theme', theme);
+    }
+  };
+
+  // ---------------------------------------------------------------
+  // Location name
+  // ---------------------------------------------------------------
+  async function renderCityName({ lat, lng }) {
+    const key = `city_${lat.toFixed(2)}_${lng.toFixed(2)}`;
+    const today = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+    let info = cache.get(key);
+    if (!info) {
+      try {
+        const d = await fetchJson(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`);
+        info = { city: d.city || d.locality || d.principalSubdivision || 'Unknown', country: d.countryName || '' };
+        cache.set(key, info);
+      } catch { info = null; }
+    }
+    $('location').innerHTML = info
+      ? `<i class="fas fa-map-marker-alt"></i> ${info.city}${info.country ? ', ' + info.country : ''} • ${today}`
+      : `<i class="fas fa-map-marker-alt"></i> ${lat.toFixed(3)}, ${lng.toFixed(3)} • ${today}`;
+  }
+
+  // ---------------------------------------------------------------
+  // Prayer times + sunrise/sunset (Aladhan)
+  // ---------------------------------------------------------------
+  const Prayers = {
+    timings: {},
+    timer: null,
+    lastPlayed: null,
+
+    async load({ lat, lng }) {
+      const key = `prayers_${lat.toFixed(3)}_${lng.toFixed(3)}_${localDateKey()}_m${CONFIG.calcMethod}`;
+      let data = cache.get(key);
+      if (!data) {
+        const res = await fetchJson(`https://api.aladhan.com/v1/timings/${aladhanDate()}?latitude=${lat}&longitude=${lng}&method=${CONFIG.calcMethod}`);
+        if (res.code !== 200) throw new Error('Invalid response from prayer times service.');
+        data = res.data;
+        cache.set(key, data);
+      }
+      this.render(data);
+    },
+
+    render(data) {
+      const t = data.timings;
+      this.timings = {};
+      CONFIG.prayers.forEach(p => { this.timings[p.key] = t[p.key].slice(0, 5); });
+
+      $('prayerList').innerHTML = CONFIG.prayers.map(p => `
+        <div class="prayer" data-prayer="${p.key}">
+          <span><i class="fas ${p.icon}"></i>${p.key}</span>
+          <span>${to12Hour(this.timings[p.key])}</span>
+        </div>`).join('');
+
+      // Sunrise / sunset
+      $('sunrise').textContent = to12Hour(t.Sunrise);
+      $('sunset').textContent = to12Hour(t.Sunset);
+      const len = toMinutes(t.Sunset) - toMinutes(t.Sunrise);
+      $('dayLength').textContent = `Daylight: ${Math.floor(len / 60)}h ${len % 60}m`;
+
+      // Hijri date
+      const h = data.date && data.date.hijri;
+      if (h) $('hijri').textContent = `${h.day} ${h.month.en} ${h.year} AH`;
+
+      show('prayersCard'); show('sunCard');
+      this.startCountdown();
+    },
+
+    startCountdown() {
+      clearInterval(this.timer);
+      this.tick();
+      this.timer = setInterval(() => this.tick(), 1000);
+    },
+
+    tick() {
+      const now = new Date();
+      let next = null, minDiff = Infinity;
+      for (const [name, time] of Object.entries(this.timings)) {
+        const [h, m] = time.split(':').map(Number);
+        const t = new Date(now); t.setHours(h, m, 0, 0);
+        if (t <= now) t.setDate(t.getDate() + 1);
+        const diff = (t - now) / 1000;
+        if (diff < minDiff) { minDiff = diff; next = name; }
+
+        // Play adhan at prayer time (within the first second)
+        const sinceStart = (now - new Date(now).setHours(h, m, 0, 0)) / 1000;
+        const playKey = `${localDateKey()}_${name}`;
+        if (Adhan.enabled && sinceStart >= 0 && sinceStart < 1.5 && this.lastPlayed !== playKey) {
+          this.lastPlayed = playKey;
+          Adhan.play();
+        }
+      }
+      if (!next) return;
+
+      document.querySelectorAll('.prayer').forEach(el =>
+        el.classList.toggle('next', el.dataset.prayer === next));
+      const s = Math.floor(minDiff);
+      $('nextPrayer').innerHTML = `<i class="fas fa-clock"></i> Next: ${next} in`;
+      $('countdown').textContent = `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s % 3600 / 60))}:${pad(s % 60)}`;
+
+      // New day -> reload times
+      if (this.day && this.day !== localDateKey()) App.refresh();
+      this.day = localDateKey();
+    }
+  };
+
+  // ---------------------------------------------------------------
+  // Adhan audio toggle (browsers need a click before audio can play)
+  // ---------------------------------------------------------------
+  const Adhan = {
+    enabled: localStorage.getItem('adhan') === 'on',
+    init() {
+      this.renderBtn();
+      $('adhanBtn').addEventListener('click', () => {
+        this.enabled = !this.enabled;
+        localStorage.setItem('adhan', this.enabled ? 'on' : 'off');
+        if (this.enabled) { // unlock audio with this user gesture
+          const a = $('adhanAudio');
+          a.muted = true;
+          a.play().then(() => { a.pause(); a.currentTime = 0; a.muted = false; }).catch(() => { a.muted = false; });
+        }
+        this.renderBtn();
+      });
+    },
+    renderBtn() {
+      $('adhanBtn').innerHTML = this.enabled
+        ? '<i class="fas fa-volume-high"></i> Adhan on'
+        : '<i class="fas fa-volume-xmark"></i> Adhan off';
+    },
+    play() {
+      const a = $('adhanAudio');
+      a.currentTime = 0;
+      a.play().catch(() => { /* blocked by browser */ });
+    }
+  };
+
+  // ---------------------------------------------------------------
+  // Qibla (great-circle bearing to the Kaaba, as used by Google Qibla Finder)
+  // ---------------------------------------------------------------
+  const Qibla = {
+    bearing: 0,
+    listening: false,
+
+    calculate(lat, lng) {
+      const φ1 = toRad(lat), φ2 = toRad(CONFIG.kaaba.lat);
+      const Δλ = toRad(CONFIG.kaaba.lng - lng);
+      const y = Math.sin(Δλ);
+      const x = Math.cos(φ1) * Math.tan(φ2) - Math.sin(φ1) * Math.cos(Δλ);
+      return (toDeg(Math.atan2(y, x)) + 360) % 360;
+    },
+
+    distanceKm(lat, lng) {
+      const R = 6371;
+      const dφ = toRad(CONFIG.kaaba.lat - lat), dλ = toRad(CONFIG.kaaba.lng - lng);
+      const a = Math.sin(dφ / 2) ** 2 + Math.cos(toRad(lat)) * Math.cos(toRad(CONFIG.kaaba.lat)) * Math.sin(dλ / 2) ** 2;
+      return 2 * R * Math.asin(Math.sqrt(a));
+    },
+
+    cardinal(deg) {
+      const dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+      return dirs[Math.round(deg / 22.5) % 16];
+    },
+
+    render({ lat, lng }) {
+      this.bearing = this.calculate(lat, lng);
+      $('qiblaAngle').textContent = `${this.bearing.toFixed(1)}° ${this.cardinal(this.bearing)}`;
+      $('qiblaInfo').textContent = `From True North • ${Math.round(this.distanceKm(lat, lng)).toLocaleString()} km to the Kaaba`;
+      $('qiblaNeedle').style.transform = `rotate(${this.bearing}deg)`;
+      show('qiblaCard');
+    },
+
+    async startCompass() {
+      if (this.listening) return;
+      try {
+        // iOS 13+ needs explicit permission
+        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+          const res = await DeviceOrientationEvent.requestPermission();
+          if (res !== 'granted') throw new Error('Compass permission denied.');
+        }
+        if (!('ondeviceorientationabsolute' in window) && !('ondeviceorientation' in window)) {
+          throw new Error('No compass on this device. Use Google Qibla Finder on your phone.');
+        }
+        const evt = 'ondeviceorientationabsolute' in window ? 'deviceorientationabsolute' : 'deviceorientation';
+        window.addEventListener(evt, e => this.onOrientation(e), true);
+        this.listening = true;
+        $('compassBtn').innerHTML = '<i class="fas fa-compass"></i> Compass on';
+        $('qiblaStatus').textContent = 'Hold your phone flat and turn until the Kaaba is at the top.';
+      } catch (err) {
+        $('qiblaStatus').textContent = err.message;
+      }
+    },
+
+    onOrientation(e) {
+      let heading = null;
+      if (typeof e.webkitCompassHeading === 'number') heading = e.webkitCompassHeading; // iOS
+      else if (e.absolute && typeof e.alpha === 'number') heading = 360 - e.alpha;     // Android
+      if (heading === null) {
+        $('qiblaStatus').textContent = 'Compass data unavailable. Try Google Qibla Finder.';
+        return;
+      }
+      $('compassDial').style.transform = `rotate(${-heading}deg)`;
+      const off = Math.abs(((this.bearing - heading + 540) % 360) - 180);
+      const status = $('qiblaStatus');
+      status.classList.toggle('aligned', off <= 5);
+      status.textContent = off <= 5 ? '✓ You are facing the Qibla' : `Turn ${Math.round(off)}° to face the Qibla`;
+    }
+  };
+
+  // ---------------------------------------------------------------
+  // 7-day weather (Open-Meteo, no API key)
+  // ---------------------------------------------------------------
+  const Weather = {
+    async load({ lat, lng }) {
+      const key = `weather_${lat.toFixed(2)}_${lng.toFixed(2)}`;
+      let data = cache.get(key, CONFIG.weatherCacheMinutes);
+      if (!data) {
+        const url = 'https://api.open-meteo.com/v1/forecast'
+          + `?latitude=${lat}&longitude=${lng}`
+          + '&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m'
+          + '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset'
+          + '&timezone=auto&forecast_days=7';
+        data = await fetchJson(url);
+        cache.set(key, data);
+      }
+      this.render(data);
+    },
+
+    info(code) {
+      return WEATHER_CODES[code] || ['Unknown', 'fa-cloud'];
+    },
+
+    render(data) {
+      const c = data.current;
+      const [desc, icon] = this.info(c.weather_code);
+      $('weatherNow').innerHTML = `
+        <i class="fas ${icon} icon"></i>
+        <div>
+          <div class="temp">${Math.round(c.temperature_2m)}°C</div>
+          <div class="desc">${desc} • Feels ${Math.round(c.apparent_temperature)}°</div>
+          <div class="desc"><i class="fas fa-wind"></i> ${Math.round(c.wind_speed_10m)} km/h • <i class="fas fa-droplet"></i> ${c.relative_humidity_2m}%</div>
+        </div>`;
+
+      const d = data.daily;
+      $('forecast').innerHTML = d.time.map((date, i) => {
+        const [dDesc, dIcon] = this.info(d.weather_code[i]);
+        const name = i === 0 ? 'Today'
+          : new Date(date + 'T12:00').toLocaleDateString(undefined, { weekday: 'short' });
+        const rain = d.precipitation_probability_max[i];
+        return `
+          <div class="day" title="${dDesc}">
+            <span class="name">${name}</span>
+            <span class="wicon"><i class="fas ${dIcon}"></i></span>
+            <span class="meta">${dDesc}${rain != null ? ` • <i class="fas fa-umbrella"></i> ${rain}%` : ''}<br>
+              <i class="fas fa-sun"></i> ${to12Hour(d.sunrise[i])} – <i class="fas fa-moon"></i> ${to12Hour(d.sunset[i])}</span>
+            <span class="range">${Math.round(d.temperature_2m_max[i])}°<span class="lo">${Math.round(d.temperature_2m_min[i])}°</span></span>
+          </div>`;
+      }).join('');
+      show('weatherCard');
+    }
+  };
+
+  // ---------------------------------------------------------------
+  // App
+  // ---------------------------------------------------------------
+  const App = {
+    busy: false,
+
+    init() {
+      Theme.init();
+      Adhan.init();
+      $('refreshBtn').addEventListener('click', () => this.refresh());
+      $('compassBtn').addEventListener('click', () => Qibla.startCompass());
+      this.refresh();
+    },
+
+    showError(msg) {
+      $('error').textContent = msg;
+      show('error', !!msg);
+    },
+
+    async refresh() {
+      if (this.busy) return;
+      this.busy = true;
+      this.showError('');
+      show('loading');
+      try {
+        const pos = await getPosition();
+        Qibla.render(pos); // pure calculation, no network needed
+
+        const results = await Promise.allSettled([
+          renderCityName(pos),
+          Prayers.load(pos),
+          Weather.load(pos)
+        ]);
+        const errors = [];
+        if (results[1].status === 'rejected') errors.push('Could not load prayer times.');
+        if (results[2].status === 'rejected') errors.push('Could not load the weather forecast.');
+        this.showError(errors.join(' '));
+      } catch (err) {
+        $('location').textContent = 'Location unavailable';
+        this.showError(err.message);
+      } finally {
+        show('loading', false);
+        this.busy = false;
+      }
+    }
+  };
+
+  window.addEventListener('DOMContentLoaded', () => App.init());
+})();
 </script>
 </body>
 </html>
