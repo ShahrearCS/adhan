@@ -43,9 +43,32 @@
     }
     .grid .card { margin-bottom: 0; }
     @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
-    .header { text-align: center; margin-bottom: 2px; }
-    .header h1 { font-size: 1.6rem; color: var(--primary); }
-    .location { text-align: center; font-size: .95rem; color: var(--success); }
+    .grid > #prayersCard { grid-column: 1 / -1; }
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      min-height: 44px; padding-right: 56px; margin: 3px 0 4px;
+    }
+    .header h1 {
+      font-size: 1.1rem; line-height: 1; color: var(--primary);
+      display: flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .header h1 i { font-size: .95rem; }
+    .location {
+      text-align: right; font-size: .8rem; line-height: 1.3; color: var(--success);
+      min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    @media (max-width: 520px) { .location { font-size: .72rem; } }
+    /* Slider */
+    .slider { margin-top: 14px; }
+    .slider-viewport { overflow: hidden; border-radius: 14px; touch-action: pan-y; }
+    .slider-track { display: flex; transition: transform .35s ease; }
+    .slider-track > .card { flex: 0 0 100%; min-width: 100%; margin: 0; }
+    .slider-track > .card.hidden { display: flex !important; flex-direction: column; }
+    .slider-nav { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 10px; }
+    .slider-nav button { width: 34px; height: 34px; padding: 0; justify-content: center; }
+    .slider-dots { display: flex; gap: 8px; }
+    .slider-dot { width: 9px; height: 9px; padding: 0; border-radius: 50%; background: var(--muted); opacity: .4; }
+    .slider-dot.active { background: var(--primary); opacity: 1; }
     .hijri { text-align: center; font-size: .82rem; color: var(--muted); margin-bottom: 12px; }
 
     .card {
@@ -164,10 +187,12 @@
   <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme"><i class="fas fa-sun"></i></button>
 
   <main class="container">
-    <header class="header">
-      <h1><i class="fas fa-mosque"></i> Adhan</h1>
-    </header>
-    <div id="location" class="location">Detecting location...</div>
+    <div class="topbar">
+      <header class="header">
+        <h1><i class="fas fa-mosque"></i> Adhan</h1>
+      </header>
+      <div id="location" class="location">Detecting location...</div>
+    </div>
     <div id="hijri" class="hijri"></div>
 
     <div id="loading" class="loading"><i class="fas fa-pray fa-3x"></i><br /><br />Loading prayer times...</div>
@@ -181,60 +206,72 @@
       <div id="prayerList"></div>
     </section>
 
-    <!-- Sunrise / Sunset -->
-    <section id="sunCard" class="card hidden">
-      <h2><i class="fas fa-sun"></i> Sunrise &amp; Sunset</h2>
-      <div class="sun-grid">
-        <div class="sun-box">
-          <i class="fas fa-sun"></i>
-          <div class="label">Sunrise</div>
-          <div class="time" id="sunrise">--:--</div>
-        </div>
-        <div class="sun-box">
-          <i class="fas fa-moon"></i>
-          <div class="label">Sunset</div>
-          <div class="time" id="sunset">--:--</div>
-        </div>
-      </div>
-      <div class="daylength" id="dayLength"></div>
-      <div class="today-weather">
-        <h2><i class="fas fa-cloud-sun"></i> Today's Weather</h2>
-        <div class="weather-now" id="weatherNow"><span class="desc">Loading...</span></div>
-      </div>
-    </section>
+    </div>
 
-    <!-- Qibla -->
-    <section id="qiblaCard" class="card hidden">
-      <h2><i class="fas fa-kaaba"></i> Qibla Direction</h2>
-      <div class="qibla-wrap">
-        <div class="compass">
-          <div class="phone-mark" title="Top of your phone"></div>
-          <div class="compass-dial" id="compassDial">
-            <span class="dir n" style="transform: translate(-50%, -50%) translateY(-62px)">N</span>
-            <span class="dir" style="transform: translate(-50%, -50%) translateX(62px)">E</span>
-            <span class="dir" style="transform: translate(-50%, -50%) translateY(62px)">S</span>
-            <span class="dir" style="transform: translate(-50%, -50%) translateX(-62px)">W</span>
-            <div class="qibla-needle" id="qiblaNeedle"><i class="fas fa-kaaba"></i></div>
+    <div class="slider" id="cardSlider">
+      <div class="slider-viewport">
+        <div class="slider-track" id="sliderTrack">
+        <!-- Sunrise / Sunset -->
+        <section id="sunCard" class="card hidden">
+          <h2><i class="fas fa-sun"></i> Sunrise &amp; Sunset</h2>
+          <div class="sun-grid">
+            <div class="sun-box">
+              <i class="fas fa-sun"></i>
+              <div class="label">Sunrise</div>
+              <div class="time" id="sunrise">--:--</div>
+            </div>
+            <div class="sun-box">
+              <i class="fas fa-moon"></i>
+              <div class="label">Sunset</div>
+              <div class="time" id="sunset">--:--</div>
+            </div>
           </div>
-          <div class="compass-center"></div>
-        </div>
-        <div class="qibla-angle" id="qiblaAngle">--°</div>
-        <div class="qibla-info" id="qiblaInfo"></div>
-        <div class="qibla-status" id="qiblaStatus">The arrow is relative to North. Turn on the live compass to point your phone.</div>
-        <div class="controls" style="margin: 0;">
-          <button class="btn-sm" id="compassBtn"><i class="fas fa-compass"></i> Live compass</button>
-          <a class="btn btn-sm secondary" href="https://qiblafinder.withgoogle.com/" target="_blank" rel="noopener">
-            <i class="fab fa-google"></i> Google Qibla Finder
-          </a>
+          <div class="daylength" id="dayLength"></div>
+          <div class="today-weather">
+            <h2><i class="fas fa-cloud-sun"></i> Today's Weather</h2>
+            <div class="weather-now" id="weatherNow"><span class="desc">Loading...</span></div>
+          </div>
+        </section>
+
+        <!-- Weather -->
+        <section id="weatherCard" class="card hidden">
+          <h2><i class="fas fa-cloud-sun"></i> 7-Day Weather</h2>
+          <div id="forecast"></div>
+        </section>
+
+        <!-- Qibla -->
+        <section id="qiblaCard" class="card hidden">
+          <h2><i class="fas fa-kaaba"></i> Qibla Direction</h2>
+          <div class="qibla-wrap">
+            <div class="compass">
+              <div class="phone-mark" title="Top of your phone"></div>
+              <div class="compass-dial" id="compassDial">
+                <span class="dir n" style="transform: translate(-50%, -50%) translateY(-62px)">N</span>
+                <span class="dir" style="transform: translate(-50%, -50%) translateX(62px)">E</span>
+                <span class="dir" style="transform: translate(-50%, -50%) translateY(62px)">S</span>
+                <span class="dir" style="transform: translate(-50%, -50%) translateX(-62px)">W</span>
+                <div class="qibla-needle" id="qiblaNeedle"><i class="fas fa-kaaba"></i></div>
+              </div>
+              <div class="compass-center"></div>
+            </div>
+            <div class="qibla-angle" id="qiblaAngle">--°</div>
+            <div class="qibla-info" id="qiblaInfo"></div>
+            <div class="qibla-status" id="qiblaStatus">The arrow is relative to North. Turn on the live compass to point your phone.</div>
+            <div class="controls" style="margin: 0;">
+              <button class="btn-sm" id="compassBtn"><i class="fas fa-compass"></i> Live compass</button>
+              <a class="btn btn-sm secondary" href="https://qiblafinder.withgoogle.com/" target="_blank" rel="noopener">
+                <i class="fab fa-google"></i> Google Qibla Finder
+              </a>
+            </div>
+          </div>
+        </section>
         </div>
       </div>
-    </section>
-
-    <!-- Weather -->
-    <section id="weatherCard" class="card hidden">
-      <h2><i class="fas fa-cloud-sun"></i> 7-Day Weather</h2>
-      <div id="forecast"></div>
-    </section>
+      <div class="slider-nav">
+        <button id="sliderPrev" class="secondary" aria-label="Previous"><i class="fas fa-chevron-left"></i></button>
+        <div class="slider-dots" id="sliderDots"></div>
+        <button id="sliderNext" class="secondary" aria-label="Next"><i class="fas fa-chevron-right"></i></button>
+      </div>
     </div>
 
     <div class="controls">
@@ -620,6 +657,39 @@
   };
 
   // ---------------------------------------------------------------
+  // Card slider (Sun -> Weather -> Qibla)
+  // ---------------------------------------------------------------
+  const Slider = {
+    index: 0,
+    init() {
+      this.slides = [...$('sliderTrack').children];
+      $('sliderDots').innerHTML = this.slides.map((_, i) =>
+        `<button class="slider-dot" data-i="${i}" aria-label="Card ${i + 1}"></button>`).join('');
+      $('sliderDots').addEventListener('click', e => {
+        const d = e.target.closest('.slider-dot');
+        if (d) this.go(+d.dataset.i);
+      });
+      $('sliderPrev').addEventListener('click', () => this.go(this.index - 1));
+      $('sliderNext').addEventListener('click', () => this.go(this.index + 1));
+      const vp = document.querySelector('.slider-viewport');
+      let x0 = null;
+      vp.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
+      vp.addEventListener('touchend', e => {
+        if (x0 === null) return;
+        const dx = e.changedTouches[0].clientX - x0; x0 = null;
+        if (Math.abs(dx) > 40) this.go(this.index + (dx < 0 ? 1 : -1));
+      }, { passive: true });
+      this.go(0);
+    },
+    go(i) {
+      const n = this.slides.length;
+      this.index = (i + n) % n;
+      $('sliderTrack').style.transform = `translateX(-${this.index * 100}%)`;
+      document.querySelectorAll('.slider-dot').forEach((d, k) => d.classList.toggle('active', k === this.index));
+    }
+  };
+
+  // ---------------------------------------------------------------
   // App
   // ---------------------------------------------------------------
   const App = {
@@ -628,6 +698,7 @@
     init() {
       Theme.init();
       Adhan.init();
+      Slider.init();
       $('refreshBtn').addEventListener('click', () => this.refresh());
       $('compassBtn').addEventListener('click', () => Qibla.startCompass());
       this.refresh();
